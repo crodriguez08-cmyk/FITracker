@@ -279,6 +279,7 @@ td.period{color:var(--heading);font-weight:700}
   </details>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 
 const SCHED_RULE = "2+ weeks old, design review date today or later";
@@ -530,9 +531,10 @@ function mapColumns(headers){
   for(const key in ALIASES){
     let idx=-1;
     for(const a of ALIASES[key].map(normH)){ idx=n.indexOf(a); if(idx>=0) break; }
-    if(idx<0){ for(const a of ALIASES[key].map(normH)){ idx=n.findIndex(h=>h && h.length>3 && h.includes(a)); if(idx>=0) break; } }
+    if(idx<0){ for(const a of ALIASES[key].map(normH)){ if(a.length<5) continue; idx=n.findIndex(h=>h && h.includes(a)); if(idx>=0) break; } }
     if(idx>=0 && !Object.values(map).includes(idx)) map[key]=idx;
   }
+  if(map.name==null && map.id!=null) map.name=map.id;
   return map;
 }
 function showColumns(map, headers){
