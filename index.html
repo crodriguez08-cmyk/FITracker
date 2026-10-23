@@ -291,7 +291,7 @@ const RULES = {
 };
 const SF_BASE = "https://national.lightning.force.com/lightning/r/Fulfillment_Item__c/";
 const OWNERS = ["Aaron Taylor","Adam Murphy","Alejandro Rodriguez-Medina","Ashley Shaffer","Ashley Vasquez Mena","Chelsea Dingus","Darling Santos Taveras","Dave Crisler","Dorka Frias Lantigua","Elizabeth White","Ellise Payne","Eric Johnson","Felix Caba Jimenez","Florence Francois Nova","Heidi Torres Uribe","Indu Vijay","Irina Molina Molina","Ironelis Cabrera Bautista","Jaelene Alejo Rodriguez","Jathzelyn Fortuna Paulino","Jennifer Koly","Joseph Carmona Garcia","Juan Sanchez Sanchez","Karen Capellan Tavarez","Karissa Hernandez","Karmita Turner","Katelyn Ankrom","Kellie Lester","Kendra Leary","Kyle Dye","Libby Booher","Lisbeth Gruning Soriano","Mark Velazquez","Matt Daly","Matthew Reedy","Mia O'Dirling","Misti Dixon","Misty Decatur","MJ Brielmann","Nikita Siepen-Bowers","Peter Manalac","Rafael Sencion","Saira Julian Guzman","Sakshi Mahalwal","Sam Frias De Paula","Sarah Swanson","Sati Pimentel Malespin","Stacy Roers","Steven Saunders","Sylvia Appla","Taylor Kidd","Tracy-Ann Gaudencio","Trisha Stalnaker","Tyler Grant","Victor Abner Moscoso Fernandez","Warda Gul","Yessica Montero Urena","Zoltan Rudolf"];
-const REPORT_URL = "data/latest-report.xlsx";
+const REPORT_URL = "data/latest-report.csv";
 const HISTORY_URL = "data/history.json";
 const ALIASES = {
   id:["fulfillment item id","record id","id"],
@@ -569,7 +569,7 @@ async function load(){
   try{
     if(typeof XLSX==="undefined") throw new Error("The spreadsheet reader didn't load. Check your internet connection and reload.");
     const res=await fetch(REPORT_URL,{cache:"no-store"});
-    if(!res.ok) throw new Error("Report not found at data/latest-report.xlsx. Check that Power Automate uploaded it.");
+    if(!res.ok) throw new Error("Report not found at data/latest-report.csv. Check that Power Automate uploaded it.");
     const wb=XLSX.read(await res.arrayBuffer(),{type:"array",cellDates:true});
     const grid=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:""});
     let hi=-1, map=null;
