@@ -1,0 +1,210 @@
+{
+ "snapshots": [
+  {
+   "date": "2026-10-06",
+   "total": 410,
+   "tracked": 143,
+   "aging": 143,
+   "over14": 143,
+   "byFn": {
+    "Consultation": {
+     "aging": 35,
+     "total": 35
+    },
+    "Launch": {
+     "aging": 3,
+     "total": 3
+    },
+    "Review": {
+     "aging": 85,
+     "total": 85
+    },
+    "Unengaged": {
+     "aging": 20,
+     "total": 20
+    }
+   }
+  },
+  {
+   "date": "2026-10-07",
+   "total": 67,
+   "tracked": 67,
+   "aging": 67,
+   "over14": 67,
+   "byFn": {
+    "Consultation": {
+     "aging": 17,
+     "total": 17
+    },
+    "Launch": {
+     "aging": 0,
+     "total": 0
+    },
+    "Review": {
+     "aging": 34,
+     "total": 34
+    },
+    "Unengaged": {
+     "aging": 16,
+     "total": 16
+    }
+   }
+  },
+  {
+   "date": "2026-10-08",
+   "total": 118,
+   "tracked": 60,
+   "aging": 60,
+   "over14": 60,
+   "sched": 58,
+   "byFn": {
+    "Consultation": {
+     "aging": 13,
+     "total": 13
+    },
+    "Launch": {
+     "aging": 0,
+     "total": 0
+    },
+    "Review": {
+     "aging": 34,
+     "total": 34
+    },
+    "Unengaged": {
+     "aging": 13,
+     "total": 13
+    }
+   }
+  },
+  {
+   "date": "2026-10-09",
+   "total": 120,
+   "tracked": 53,
+   "aging": 53,
+   "over14": 53,
+   "sched": 67,
+   "byFn": {
+    "Consultation": {
+     "aging": 10,
+     "total": 10
+    },
+    "Launch": {
+     "aging": 1,
+     "total": 1
+    },
+    "Review": {
+     "aging": 31,
+     "total": 31
+    },
+    "Unengaged": {
+     "aging": 11,
+     "total": 11
+    }
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "total": 136,
+   "tracked": 59,
+   "aging": 59,
+   "over14": 59,
+   "sched": 77,
+   "byFn": {
+    "Consultation": {
+     "aging": 11,
+     "total": 11
+    },
+    "Launch": {
+     "aging": 0,
+     "total": 0
+    },
+    "Review": {
+     "aging": 36,
+     "total": 36
+    },
+    "Unengaged": {
+     "aging": 12,
+     "total": 12
+    }
+   }
+  },
+  {
+   "date": "2026-10-13",
+   "total": 138,
+   "tracked": 74,
+   "aging": 74,
+   "over14": 74,
+   "sched": 64,
+   "byFn": {
+    "Consultation": {
+     "aging": 12,
+     "total": 12
+    },
+    "Launch": {
+     "aging": 1,
+     "total": 1
+    },
+    "Review": {
+     "aging": 44,
+     "total": 44
+    },
+    "Unengaged": {
+     "aging": 17,
+     "total": 17
+    }
+   }
+  },
+  {
+   "date": "2026-10-14",
+   "total": 146,
+   "tracked": 76,
+   "aging": 76,
+   "over14": 76,
+   "sched": 70,
+   "byFn": {
+    "Consultation": {
+     "aging": 11,
+     "total": 11
+    },
+    "Launch": {
+     "aging": 1,
+     "total": 1
+    },
+    "Review": {
+     "aging": 45,
+     "total": 45
+    },
+    "Unengaged": {
+     "aging": 19,
+     "total": 19
+    }
+   }
+  },
+  {
+   "date": "2026-10-15",
+   "total": 153,
+   "tracked": 86,
+   "aging": 86,
+   "over14": 86,
+   "sched": 67,
+   "byFn": {
+    "Consultation": {
+     "aging": 10,
+     "total": 10
+    },
+    "Launch": {
+     "aging": 1,
+     "total": 1
+    },
+    "Review": {
+     "aging": 54,
+     "total": 54
+    },
+    "Unengaged": {
+     "aging": 21,
+     "total": 21
+    }
+   }
+  }
+ ]
+}
