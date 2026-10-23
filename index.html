@@ -1,0 +1,618 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>FI Aging Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Thryv Brand Book 2026, matching TSS Case Operations: Midnight dominant, Cornflower
+   carries the data, Orange is the accent and marks what needs attention. Neutrals
+   fill the rest. Inter only; figures use tabular numerals.
+   Layout: gradient nav bar, KPI row, four function tiles, upcoming-review tile, trend, then the FI queue. */
+:root{
+  color-scheme:light;
+  --midnight:#29355D; --midnight-d1:#1D2541; --midnight-l1:#586EB6; --midnight-l2:#BDC6E5;
+  --cornflower:#3D5199; --cornflower-d1:#26325F; --cornflower-l1:#8393CE; --cornflower-l2:#D6DEF0;
+  --orange:#FF5000; --orange-d1:#D63F00; --orange-l1:#FFC0A3; --orange-l2:#FFDCCC;
+  --black:#121212; --night:#4D4D4D; --steel:#808080; --cloud:#ECEEF1; --mist:#F4F6FB; --white:#FFFFFF;
+
+  --bg:var(--mist); --surface:var(--white); --surface-2:var(--cloud);
+  --ink:var(--black); --ink-2:var(--night); --muted:var(--steel);
+  --line:var(--cloud); --line-strong:var(--midnight-l2); --heading:var(--midnight);
+  --accent:var(--cornflower); --accent-soft:var(--cornflower-l2);   /* data + links */
+  --ok:var(--cornflower); --ok-soft:var(--cornflower-l2);
+  --warn:var(--midnight-l1); --warn-soft:var(--cornflower-l2);
+  --bad:var(--orange); --bad-ink:var(--orange-d1); --bad-soft:var(--orange-l2);
+  --nav-from:var(--midnight-d1); --nav-to:var(--cornflower); --nav-ink:var(--white); --nav-ink-2:var(--midnight-l2);
+  --nav-line:rgba(255,255,255,.22); --nav-chip:rgba(255,255,255,.10);
+  --shadow:0 1px 2px rgba(41,53,93,.06),0 8px 24px -16px rgba(41,53,93,.30);
+  --f-display:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-body:var(--f-display); --f-mono:var(--f-display);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:var(--midnight-d1); --surface:var(--midnight); --surface-2:var(--cornflower-d1);
+  --ink:var(--white); --ink-2:var(--midnight-l2); --muted:var(--cornflower-l1);
+  --line:var(--cornflower-d1); --line-strong:var(--cornflower); --heading:var(--white);
+  --accent:var(--cornflower-l1); --accent-soft:var(--cornflower-d1);
+  --ok:var(--cornflower-l1); --ok-soft:var(--cornflower-d1); --warn:var(--midnight-l2); --warn-soft:var(--cornflower-d1);
+  --bad-ink:var(--orange-l1); --bad-soft:var(--orange-d1);
+  --shadow:0 1px 2px rgba(0,0,0,.40),0 8px 24px -16px rgba(0,0,0,.80)}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:var(--midnight-d1); --surface:var(--midnight); --surface-2:var(--cornflower-d1);
+  --ink:var(--white); --ink-2:var(--midnight-l2); --muted:var(--cornflower-l1);
+  --line:var(--cornflower-d1); --line-strong:var(--cornflower); --heading:var(--white);
+  --accent:var(--cornflower-l1); --accent-soft:var(--cornflower-d1);
+  --ok:var(--cornflower-l1); --ok-soft:var(--cornflower-d1); --warn:var(--midnight-l2); --warn-soft:var(--cornflower-d1);
+  --bad-ink:var(--orange-l1); --bad-soft:var(--orange-d1);
+  --shadow:0 1px 2px rgba(0,0,0,.40),0 8px 24px -16px rgba(0,0,0,.80)}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:22px 56px;display:grid;gap:26px}
+h1,h2{margin:0;color:var(--heading);text-wrap:balance}
+h2{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--bad);outline-offset:2px}
+
+/* nav bar: the one 45-degree gradient */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:linear-gradient(45deg,var(--nav-from),var(--nav-to));color:var(--nav-ink);border-bottom:1px solid var(--nav-line)}
+.top-in{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:14px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brandmark{width:34px;height:34px;flex:none;border-radius:9px;background:var(--orange);color:var(--white);display:grid;place-items:center;font-weight:800;font-size:13px;letter-spacing:.02em}
+.titles{flex:1 1 260px;min-width:0}
+.titles h1{color:var(--nav-ink);font-size:23px;font-weight:800;letter-spacing:-.015em;line-height:1.2}
+.titles p{margin:2px 0 0;font-size:12px;color:var(--nav-ink-2)}
+.hdr-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--nav-line);background:var(--nav-chip);color:var(--nav-ink)}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--nav-ink-2)}
+.pill.live::before{background:var(--white)}
+.pill.snap{border-color:var(--orange)}.pill.snap::before{background:var(--orange)}
+.btn{border:1px solid var(--orange);background:var(--orange);color:var(--white);padding:10px 16px;border-radius:8px;font-weight:600;line-height:1}
+.btn:hover{background:var(--orange-d1);border-color:var(--orange-d1)}
+.btn:disabled{opacity:.5;cursor:progress}
+.btn:focus-visible{outline-color:var(--white)}
+.btn.ghost{background:var(--nav-chip);border-color:var(--nav-line);color:var(--nav-ink)}
+.status{flex-basis:100%;font-size:12px;color:var(--nav-ink-2);text-align:right;min-height:1.2em}
+.status.busy::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border:2px solid var(--orange);border-right-color:transparent;border-radius:50%;vertical-align:-1px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.status.busy::before{animation:none}}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px 16px 14px;box-shadow:var(--shadow);display:grid;gap:3px;min-width:0}
+.kpi .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.kpi .val{font-size:32px;font-weight:800;line-height:1.1;letter-spacing:-.02em;color:var(--heading)}
+.kpi .delta{font-size:12px;color:var(--muted)}
+.delta .up{color:var(--bad-ink);font-weight:700}.delta .down{color:var(--ok);font-weight:700}
+.kpi.hero .val{color:var(--accent)}
+.kpi.attn .val{color:var(--bad-ink)}
+
+.lanes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.lanes.one{grid-template-columns:minmax(0,1fr)}
+.lane{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:15px 16px 13px;display:grid;gap:9px;color:var(--ink);min-width:0}
+.lane:hover{border-color:var(--line-strong)}
+.lane[aria-pressed="true"]{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange) inset,var(--shadow)}
+.lane .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lane .name{font-size:16px;font-weight:700;color:var(--heading)}
+.lane .big{font-size:28px;font-weight:800;line-height:1;letter-spacing:-.02em;color:var(--heading)}
+.lane .big small{font-size:13px;color:var(--muted);font-weight:500;letter-spacing:0}
+.lane .rule{font-size:12px;color:var(--muted)}
+.bar{display:block;height:9px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;background:var(--orange)}
+.sev{font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.sev.ok{background:var(--ok-soft);color:var(--heading)}.sev.warn{background:var(--surface-2);color:var(--heading)}.sev.bad{background:var(--bad-soft);color:var(--bad-ink)}
+
+.others{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font:600 13px/1 var(--f-body);padding:8px 12px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--heading)}
+.chip b{margin-left:6px}
+.chip:hover{border-color:var(--orange);color:var(--bad-ink)}
+.chip[aria-pressed="true"]{background:var(--orange);border-color:var(--orange);color:var(--white)}
+.bucket-filter{border:1px solid var(--line-strong);background:var(--surface-2);color:var(--heading)}
+.bucket-filter[data-bucket="all"]{border-color:var(--line-strong);color:var(--heading)}
+.bucket-filter[data-bucket="b1"]{border-color:#008D71;color:#008D71}
+.bucket-filter[data-bucket="b2"]{border-color:#FFDD00;color:#FFDD00}
+.bucket-filter[data-bucket="b3"]{border-color:#FF0054;color:#FF0054}
+.bucket-filter[aria-pressed="true"][data-bucket="all"]{background:var(--orange);border-color:var(--orange);color:var(--white)}
+.bucket-filter[aria-pressed="true"][data-bucket="b1"]{background:#008D71;border-color:#008D71;color:var(--white)}
+.bucket-filter[aria-pressed="true"][data-bucket="b2"]{background:#FFDD00;border-color:#FFDD00;color:#000}
+.bucket-filter[aria-pressed="true"][data-bucket="b3"]{background:#FF0054;border-color:#FF0054;color:var(--white)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:16px 18px 18px;display:grid;gap:12px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:16px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--c)}
+#trend{width:100%;height:auto;display:block}
+.note{font-size:12px;color:var(--muted)}
+
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.controls input[type=search]{font:inherit;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface-2);color:var(--ink);min-width:0;width:230px;max-width:100%}
+.controls label{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink-2)}
+.controls input[type=checkbox]{accent-color:var(--orange)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:9px 8px;text-align:left;white-space:nowrap;vertical-align:top}
+th.r,td.r{text-align:right}
+td.wrap-cell{white-space:normal;min-width:140px;max-width:220px}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--line-strong);background:var(--surface);position:sticky;top:0;cursor:pointer;user-select:none}
+th[aria-sort="ascending"]::after{content:" \25B2"}th[aria-sort="descending"]::after{content:" \25BC"}
+td{border-bottom:1px solid var(--line);color:var(--ink-2)}
+tr.aging td:first-child{box-shadow:inset 3px 0 0 var(--orange)}
+td a{color:var(--accent);font-weight:700;text-decoration:none}td a:hover{text-decoration:underline}
+td.why{white-space:normal;min-width:180px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.msg{padding:10px 14px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:13px}
+.msg[data-kind="err"]{border-color:var(--orange);background:var(--bad-soft);color:var(--bad-ink)}
+details.rules summary{cursor:pointer;font-weight:700;color:var(--heading)}
+details.rules ul{margin:8px 0 0;padding-left:18px;color:var(--ink-2)}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:600 14px/1 var(--f-body);padding:10px 16px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--heading)}
+.tab:hover{border-color:var(--orange)}
+.tab[aria-selected="true"]{background:var(--midnight);border-color:var(--midnight);color:var(--white)}
+.view{display:grid;gap:26px}
+.grain{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.grain .m-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+td.d-up{color:var(--bad-ink);font-weight:700}td.d-down{color:var(--ok);font-weight:700}
+td.period{color:var(--heading);font-weight:700}
+@media (max-width:860px){.kpis,.lanes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.kpi .val{font-size:26px}.status{text-align:left}}
+@media (prefers-reduced-motion:no-preference){.lane,.chip{transition:border-color .15s}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brandmark">FI</div>
+    <div class="titles">
+      <h1>FI Aging Tracker</h1>
+      <p>Aging FIs plus upcoming scheduled reviews &middot; data from the daily Salesforce report &middot; designated owners only (60 people)</p>
+    </div>
+    <div class="hdr-actions">
+      <span id="src" class="pill snap">Loading&hellip;</span>
+      <button id="refresh" class="btn" type="button">Reload report</button>
+    </div>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+
+  <div id="msg" class="msg" hidden></div>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button type="button" class="tab" role="tab" id="tab-today" aria-selected="true" aria-controls="view-today">Today</button>
+    <button type="button" class="tab" role="tab" id="tab-history" aria-selected="false" aria-controls="view-history">History</button>
+  </nav>
+
+  <div id="view-today" class="view" role="tabpanel">
+
+  <section class="kpis" aria-label="Summary">
+    <div class="kpi"><span class="lbl">Total tracked</span><span class="val num" id="k-total">&ndash;</span><span class="delta" id="d-total"></span></div>
+  </section>
+
+  <section style="display:grid;gap:10px">
+    <h2>Tracked functions</h2>
+    <div class="lanes" id="lanes"></div>
+    <div class="others" id="others"></div>
+  </section>
+
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2 id="list-title">All tracked FIs</h2>
+      <div class="controls">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="search" id="q" placeholder="Search FI #, account, owner" aria-label="Search">
+          <select id="coach" aria-label="CSM coach" style="font:inherit;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface-2);color:var(--ink);max-width:100%"><option value="__all">All coaches</option></select>
+          <label id="aging-lbl"><input type="checkbox" id="only-aging" checked disabled> Aging only (required)</label>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;font-size:12px" role="group" aria-label="Age filter">
+          <button type="button" class="chip bucket-filter" data-bucket="all" aria-pressed="true">All</button>
+          <button type="button" class="chip bucket-filter" data-bucket="b1">14-21d</button>
+          <button type="button" class="chip bucket-filter" data-bucket="b2">21-29d</button>
+          <button type="button" class="chip bucket-filter" data-bucket="b3">30+d</button>
+        </div>
+        <div style="font-size:12px;color:#999;margin-top:4px"><span id="fi-count">0</span> FIs shown</div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th data-k="name">FI #</th><th data-k="account">Account</th><th data-k="fn">Function</th><th data-k="status">Status</th>
+          <th data-k="owner">Owner</th><th data-k="created">Created</th><th data-k="age" class="r" title="Days since created">Age</th>
+          <th data-k="fnDays" class="r" title="Days in current function">Fn days</th><th data-k="dr">Review date</th><th data-k="why">Reason</th>
+        </tr></thead>
+        <tbody id="rows"><tr><td colspan="10" class="empty">The FI list appears here once Salesforce data loads.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="note" id="count-note"></div>
+  </section>
+
+  </div>
+
+  <div id="view-history" class="view" role="tabpanel" hidden>
+    <section class="panel">
+      <div class="panel-head">
+        <h2 id="h-title">Day over day</h2>
+        <div class="grain" role="group" aria-label="Group history by">
+          <span class="m-label">Group by</span>
+          <button type="button" class="chip" data-grain="day" aria-pressed="true">Day</button>
+          <button type="button" class="chip" data-grain="week" aria-pressed="false">Week</button>
+          <button type="button" class="chip" data-grain="month" aria-pressed="false">Month</button>
+        </div>
+      </div>
+      <div class="legend"><span style="--c:var(--bad)">Aging (out of SLA)</span><span style="--c:var(--accent)">Over 2 weeks old</span></div>
+      <svg id="trend" viewBox="0 0 900 220" role="img" aria-label="Trend of aging FIs"></svg>
+      <div class="note" id="trend-note"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2 id="ht-title">Daily snapshots</h2><span class="note" id="hist-src"></span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Period</th><th class="r" title="Snapshots in this period">Days</th><th class="r">Aging</th><th class="r" title="Change in aging vs previous period">Change</th>
+            <th class="r">Consultation</th><th class="r">Launch</th><th class="r">Review</th><th class="r">Review w/ Appointment</th><th class="r">Unengaged</th><th class="r">Tracked</th>
+          </tr></thead>
+          <tbody id="hist-rows"></tbody>
+        </table>
+      </div>
+      <div class="note" id="hist-note"></div>
+    </section>
+  </div>
+
+  <details class="rules panel">
+    <summary>SLA rules used on this page</summary>
+    <ul>
+      <li><b>Goal:</b> no open FI older than 14 days, counted from Fulfillment Item: Created Date.</li>
+      <li><b>Consultation:</b> aging when created more than 14 days ago.</li>
+      <li><b>Launch:</b> any Launch FI still In Progress is aging. It should have Domain/URL, Client is currently using DBE, and Login Information Acquired filled in, then be completed.</li>
+      <li><b>Review:</b> aging when FI is 14+ days old AND (Design Review is blank or the date has passed).</li>
+      <li><b>Unengaged:</b> aging when FI is 14+ days old AND has been in Unengaged more than 5 business days (from Function Aging Days).</li>
+      <li><b>Upcoming scheduled review:</b> FI is 14+ days old AND Design Review date is today or later, in any tracked function. Its own box shows the count; these FIs are also included in Total tracked and All tracked FIs, but not in the function boxes.</li>
+      <li>Only Consultation, Launch, Review and Unengaged FIs are included.</li>
+    </ul>
+  </details>
+
+  <details class="rules panel" id="colcheck">
+    <summary>Report columns found</summary>
+    <div class="note" id="colmap" style="margin-top:8px"></div>
+  </details>
+</div>
+
+<script>
+
+const SCHED_RULE = "2+ weeks old, design review date today or later";
+const TRACKED = ["Consultation","Launch","Review","Unengaged"];
+const RULES = {
+  Consultation:"Over 14 days since created",
+  Launch:"Any In Progress Launch FI",
+  Review:"No upcoming design review",
+  Unengaged:"More than 5 business days in Unengaged"
+};
+const SF_BASE = "https://national.lightning.force.com/lightning/r/Fulfillment_Item__c/";
+const OWNERS = ["Aaron Taylor","Adam Murphy","Alejandro Rodriguez-Medina","Ashley Shaffer","Ashley Vasquez Mena","Chelsea Dingus","Darling Santos Taveras","Dave Crisler","Dorka Frias Lantigua","Elizabeth White","Ellise Payne","Eric Johnson","Felix Caba Jimenez","Florence Francois Nova","Heidi Torres Uribe","Indu Vijay","Irina Molina Molina","Ironelis Cabrera Bautista","Jaelene Alejo Rodriguez","Jathzelyn Fortuna Paulino","Jennifer Koly","Joseph Carmona Garcia","Juan Sanchez Sanchez","Karen Capellan Tavarez","Karissa Hernandez","Karmita Turner","Katelyn Ankrom","Kellie Lester","Kendra Leary","Kyle Dye","Libby Booher","Lisbeth Gruning Soriano","Mark Velazquez","Matt Daly","Matthew Reedy","Mia O'Dirling","Misti Dixon","Misty Decatur","MJ Brielmann","Nikita Siepen-Bowers","Peter Manalac","Rafael Sencion","Saira Julian Guzman","Sakshi Mahalwal","Sam Frias De Paula","Sarah Swanson","Sati Pimentel Malespin","Stacy Roers","Steven Saunders","Sylvia Appla","Taylor Kidd","Tracy-Ann Gaudencio","Trisha Stalnaker","Tyler Grant","Victor Abner Moscoso Fernandez","Warda Gul","Yessica Montero Urena","Zoltan Rudolf"];
+const REPORT_URL = "data/latest-report.xlsx";
+const HISTORY_URL = "data/history.json";
+const ALIASES = {
+  id:["fulfillment item id","record id","id"],
+  name:["fulfillment item name","fi number","fi","name"],
+  account:["account name","account"],
+  fn:["current function","current function name","function"],
+  status:["fulfillment item status","status"],
+  owner:["fulfillment item owner","fulfillment item owner name","owner name","owner"],
+  created:["fulfillment item created date","created date","created"],
+  fnDays:["function aging days","days in function","fn days"],
+  dr:["design review date","design review"],
+  domain:["domain url","domain/url"],
+  dbe:["client is currently using dbe","client currently using dbe"],
+  login:["login information acquired","login information"],
+  coach:["onboarding form csm coach name","csm coach name","coach name"]
+};
+const LABELS = {id:"Id",name:"FI #",account:"Account",fn:"Function",status:"Status",owner:"Owner",created:"Created",fnDays:"Function aging days",dr:"Design review",domain:"Domain/URL",dbe:"Using DBE",login:"Login info",coach:"CSM Coach"};
+const normH = s => String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+let HISTORY = [];
+let TODAY = ymd(new Date());
+const state = { rows:null, sched:null, all:null, coach:"__all", filter:"__all", q:"", onlyAging:true, only14:false, sortK:"age", sortDir:-1, bucketFilter:"all" };
+const $ = id => document.getElementById(id);
+
+
+function fmtCoach(s){ return s ? String(s).replace(/([a-z])([A-Z])/g,"$1 $2") : ""; }
+function coachOK(r){ return state.coach==="__all" || (state.coach==="__none" ? !r.coach : r.coach===state.coach); }
+function currentSummary(){
+  const rows=state.rows.filter(coachOK), sch=state.sched.filter(coachOK);
+  const s=summarize(rows); s.date=ymd(new Date()); s.total=rows.length+sch.length; s.sched=sch.length; return s;
+}
+function fillCoaches(list){
+  const sel=$("coach"); const prev=state.coach;
+  const names=[...new Set(list.map(r=>r.coach).filter(Boolean))].sort();
+  const none=list.some(r=>!r.coach);
+  sel.innerHTML='<option value="__all">All coaches</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join("")+(none?'<option value="__none">Unassigned</option>':"");
+  sel.value = (names.includes(prev) || prev==="__none") ? prev : "__all";
+  state.coach = sel.value;
+}
+
+function ymd(d){ const p=n=>String(n).padStart(2,"0"); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+function businessDaysSince(start, now){
+  let n=0; const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()); const end=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  while(d<end){ d.setDate(d.getDate()+1); const w=d.getDay(); if(w!==0&&w!==6) n++; }
+  return n;
+}
+function fmtDate(s){ if(!s) return "—"; const d=new Date(s.length===10? s+"T12:00:00": s); return d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+
+
+
+function classify(r, now){
+  const today=TODAY;
+  const age = r.created ? (now-r.created)/864e5 : 0;
+  const fnDays=Number(r.fnDays)||0;
+  const drStr = r.dr ? ymd(r.dr) : null;
+  const upcoming = !!drStr && drStr>=today;
+  const fn=r.fn||"(blank)";
+  let aging=false, why="";
+  if(fn==="Consultation"){ if(age>14){aging=true; why=`Created ${Math.floor(age)} days ago (limit 14)`;} }
+  else if(fn==="Launch"){
+    if(r.status==="In Progress"){ aging=true;
+      const miss=[]; if(!r.domain) miss.push("Domain/URL"); if(!r.dbe) miss.push("Using DBE"); if(!r.login) miss.push("Login info");
+      why = miss.length? "Missing: "+miss.join(", ") : "All fields filled, ready to complete"; }
+  }
+  else if(fn==="Review"){ if(age>=14){aging=true; why= upcoming ? `${Math.floor(age)}d old, review ${fmtDate(drStr)} upcoming` : drStr ? `${Math.floor(age)}d old, review ${fmtDate(drStr)} passed` : `${Math.floor(age)}d old, no review date`;} }
+  else if(fn==="Unengaged"){
+    const entered=new Date(now - Math.max(fnDays,0)*864e5); const bd=businessDaysSince(entered, now);
+    if(age>=14 && bd>5){aging=true; why=`${Math.floor(age)}d old, ${bd} business days in Unengaged (limit 5)`;}
+  }
+  const sched = fn==="Review" && age>=14 && upcoming;
+  return { id:r.id, name:r.name, account:r.account, fn, status:r.status, owner:r.owner, coach:r.coach,
+    created:r.created, age, fnDays, dr:drStr, aging, sched, over14:age>14,
+    why: sched ? `Review ${fmtDate(drStr)}` : (why || (age>14 && !TRACKED.includes(fn) ? "Over 2 weeks old" : "")) };
+}
+
+function summarize(rows){
+  const byFn={}, others={}; let aging=0, over14=0, tracked=0;
+  TRACKED.forEach(f=>byFn[f]={total:0,aging:0,b1:0,b2:0,b3:0});
+  rows = rows.filter(r=>TRACKED.includes(r.fn));
+  rows.forEach(r=>{ if(r.over14) over14++;
+    if(TRACKED.includes(r.fn)){ tracked++; byFn[r.fn].total++; if(r.aging){byFn[r.fn].aging++; aging++;
+      if(r.age>=14&&r.age<21) byFn[r.fn].b1++;
+      else if(r.age>=21&&r.age<30) byFn[r.fn].b2++;
+      else if(r.age>=30) byFn[r.fn].b3++;
+    } }
+    });
+  return { date:ymd(new Date()), total:rows.length, over14, tracked, aging, byFn, others };
+}
+
+function delta(cur, prev, el, lowerIsBetter=true, pct=false){
+  if(prev==null){ el.textContent="First snapshot. Change appears tomorrow."; return; }
+  const d=cur-prev; if(Math.abs(d)<(pct?0.05:0.5)){ el.innerHTML="No change vs yesterday"; return; }
+  const good = lowerIsBetter ? d<0 : d>0;
+  const txt=(d>0?"+":"")+(pct? d.toFixed(1)+" pts" : Math.round(d));
+  el.innerHTML=`<span class="${good?'down':'up'}">${txt}</span> vs previous day`;
+}
+
+
+let CUR=null;
+function paint(){ if(state.rows) renderSummary(currentSummary()); else if(CUR) renderSummary(CUR); renderTable(); }
+
+function renderSummary(s){
+  CUR=s;
+  const prev = HISTORY.filter(h=>h.date<s.date).slice(-1)[0] || null;
+  $("k-total").textContent = s.total;
+  if(state.coach==="__all") delta(s.total, prev&&prev.total, $("d-total")); else $("d-total").textContent="";
+
+  $("lanes").innerHTML = TRACKED.map(f=>{
+    const b=s.byFn[f]||{total:0,aging:0,b1:0,b2:0,b3:0}; const p=b.total? b.aging/b.total:0;
+    const pv = state.coach==="__all" && prev&&prev.byFn&&prev.byFn[f]; let changeIndicator="";
+    if(pv){ const d=b.aging-pv.aging; changeIndicator = `<span style="font-size:13px;font-weight:600;color:var(${d<0?'--ok':'--bad'})">${d>0?'+':''}${d}</span>`; }
+    const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">14-21d</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">21-29d</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">30+d</span></div></div></div>`;
+    return `<button type="button" class="lane" data-fn="${f}" aria-pressed="${state.filter===f}" style="display:flex;flex-direction:column">
+      <div class="top"><span class="name">${f}</span><div style="display:flex;flex-direction:column;align-items:flex-end;font-size:11px;color:#999"><div>${changeIndicator}</div><div>vs yesterday</div></div></div>
+      <div class="big num">${b.aging}</div>
+      ${buckets}<div class="rule" style="margin-top:auto">${RULES[f]}</div></button>`;
+  }).join("");
+
+  renderSched();
+  $("others").innerHTML = `<button type="button" class="chip" data-fn="__all" aria-pressed="${state.filter==='__all'}">Show all tracked FIs<b>${s.total}</b></button>`;
+  document.querySelectorAll("#lanes [data-fn], #others [data-fn]").forEach(b=>b.addEventListener("click",()=>{ state.filter=b.dataset.fn; paint(); document.getElementById("list-title").scrollIntoView({behavior:"smooth",block:"start"}); }));
+}
+
+function renderSched(){
+  if(!state.sched) state.sched=[];
+  const SCHED=state.sched.filter(coachOK);
+  const pressed = state.filter==="__sched";
+  const b={b1:0,b2:0,b3:0};
+  SCHED.forEach(r=>{ if(r.age>=14&&r.age<21) b.b1++; else if(r.age>=21&&r.age<30) b.b2++; else if(r.age>=30) b.b3++; });
+  const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">14-21d</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">21-29d</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">30+d</span></div></div></div>`;
+  $("lanes").querySelector('[data-fn="Review"]').insertAdjacentHTML("afterend", `<button type="button" class="lane" data-fn="__sched" aria-pressed="${pressed}" style="display:flex;flex-direction:column">
+    <div class="top"><span class="name">Review w/ Appointment</span><div style="display:flex;flex-direction:column;align-items:flex-end;font-size:11px;color:#999"><div>${(()=>{ if(state.coach!=="__all") return ""; const pv=HISTORY.filter(h=>h.date<(CUR?CUR.date:"")).slice(-1)[0]; if(!pv||pv.sched==null) return ""; const d=SCHED.length-pv.sched; return `<span style="font-size:13px;font-weight:600;color:var(${d<0?'--ok':'--bad'})">${d>0?'+':''}${d}</span>`; })()}</div><div>vs yesterday</div></div></div>
+    <div class="big num">${SCHED.length}</div>
+    ${buckets}<div class="rule" style="margin-top:auto">${SCHED_RULE}</div></button>`);
+}
+
+let GRAIN="day";
+function mergeHistory(list){
+  const map={}; HISTORY.forEach(h=>map[h.date]=h);
+  (list||[]).forEach(h=>{ if(h && typeof h.date==="string" && /^\d{4}-\d{2}-\d{2}$/.test(h.date) && h.byFn) map[h.date]=h; });
+  const merged=Object.values(map).sort((a,b)=>a.date<b.date?-1:1);
+  HISTORY.length=0; merged.forEach(h=>HISTORY.push(h));
+}
+function weekStart(ds){ const d=new Date(ds+"T12:00:00"); const w=(d.getDay()+6)%7; d.setDate(d.getDate()-w); return ymd(d); }
+function grouped(grain){
+  if(grain==="day") return HISTORY.map(h=>Object.assign({label:fmtDate(h.date), key:h.date, n:1}, h));
+  const groups={};
+  HISTORY.forEach(h=>{ const k= grain==="week"? weekStart(h.date) : h.date.slice(0,7); (groups[k]=groups[k]||[]).push(h); });
+  return Object.keys(groups).sort().map(k=>{
+    const g=groups[k], n=g.length, avg=f=>Math.round(g.reduce((t,h)=>t+f(h),0)/n);
+    const byFn={}; TRACKED.forEach(f=>byFn[f]={aging:avg(h=>(h.byFn[f]||{}).aging||0), total:avg(h=>(h.byFn[f]||{}).total||0)});
+    const label = grain==="week" ? "Week of "+fmtDate(k) : new Date(k+"-15T12:00:00").toLocaleDateString(undefined,{month:"long",year:"numeric"});
+    return {key:k, label, date:g[n-1].date, n, total:avg(h=>h.total), tracked:avg(h=>h.tracked), aging:avg(h=>h.aging), over14:avg(h=>h.over14), sched:avg(h=>h.sched||0), byFn};
+  });
+}
+function renderHistory(){
+  const rows=grouped(GRAIN);
+  $("ht-title").textContent={day:"Daily snapshots",week:"Weekly averages",month:"Monthly averages"}[GRAIN];
+  $("h-title").textContent={day:"Day over day",week:"Week over week",month:"Month over month"}[GRAIN];
+  document.querySelectorAll("[data-grain]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.grain===GRAIN)));
+  const out=rows.slice().reverse().map((r,i,arr)=>{
+    const prev=arr[i+1]; const d= prev? r.aging-prev.aging : null;
+    const cell = d==null? '<td class="r">—</td>' : `<td class="r ${d<0?'d-down':d>0?'d-up':''}">${d>0?'+':''}${d}</td>`;
+    const fn = TRACKED.map(f=>{ const c=`<td class="r">${(r.byFn[f]||{}).aging||0}</td>`; return f==="Review" ? c+`<td class="r">${r.sched==null?'—':r.sched}</td>` : c; }).join("");
+    return `<tr><td class="period">${r.label}</td><td class="r">${r.n}</td><td class="r">${r.aging}</td>${cell}${fn}<td class="r">${r.tracked}</td></tr>`;
+  }).join("");
+  $("hist-rows").innerHTML = out || '<tr><td colspan="12" class="empty">No snapshots yet.</td></tr>';
+  $("hist-note").textContent = (GRAIN==="day"? "" : "Week and month rows average the daily snapshots in that period. ") + "Function columns show aging FIs out of each function's total. A snapshot is saved each time the page refreshes from Salesforce, one per day (the latest refresh that day wins).";
+  renderTrend(null);
+}
+function renderTrend(live){
+  const pts = grouped(GRAIN);
+  const svg=$("trend"), W=900, H=220, L=44, R=16, T=14, B=34;
+  const maxV = Math.max(10, ...pts.map(p=>Math.max(p.aging,p.over14)));
+  const step = Math.pow(10, Math.floor(Math.log10(maxV))); const top = Math.ceil(maxV/step)*step;
+  const x = i => pts.length===1? (L+(W-R))/2 : L + i*((W-L-R)/(pts.length-1));
+  const y = v => T + (H-T-B)*(1 - v/top);
+  let g="";
+  for(let k=0;k<=4;k++){ const v=top*k/4, yy=y(v);
+    g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-width="1"/>`+
+       `<text x="${L-8}" y="${yy+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--f-mono)">${Math.round(v)}</text>`; }
+  const line=(key,color)=>{
+    const d=pts.map((p,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(p[key]).toFixed(1)}`).join("");
+    let s = pts.length>1? `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>` : "";
+    pts.forEach((p,i)=>{ const last=i===pts.length-1; s+=`<circle cx="${x(i)}" cy="${y(p[key])}" r="${last?5:3}" fill="${color}"/>`;
+      if(last) s+=`<text x="${x(i)}" y="${y(p[key])-10}" text-anchor="middle" font-size="12" font-weight="600" fill="${color}" font-family="var(--f-mono)">${p[key]}</text>`; });
+    return s; };
+  const every = Math.max(1, Math.ceil(pts.length/10));
+  const xl = pts.map((p,i)=> i%every===0||i===pts.length-1 ? `<text x="${x(i)}" y="${H-12}" text-anchor="middle" font-size="11" fill="var(--muted)">${GRAIN==="day"?fmtDate(p.date):(GRAIN==="week"?fmtDate(p.key):p.label.split(" ")[0].slice(0,3)+" "+p.key.slice(2,4))}</text>`:"").join("");
+  svg.innerHTML = g + line("over14","var(--accent)") + line("aging","var(--bad)") + xl;
+  $("trend-note").textContent = pts.length<2 ? "Tracking started Oct 6, 2026. The trend line appears once there is a second "+({day:"day",week:"week",month:"month"}[GRAIN])+" of snapshots." : `${pts.length} ${({day:"days",week:"weeks",month:"months"}[GRAIN])} shown.`;
+}
+
+function renderTable(){
+  const tb=$("rows");
+  const isSched = state.filter==="__sched";
+  $("list-title").textContent = state.filter==="__all" ? "All tracked FIs" : isSched ? "Review w/ Appointment (2+ weeks old)" : state.filter+" FIs";
+  $("aging-lbl").hidden = state.filter==="__all" || isSched;
+  if(!state.rows){ return; }
+  const q=state.q.trim().toLowerCase();
+  const base = state.filter==="__all" ? (state.all||[]) : isSched ? (state.sched||[]) : state.rows;
+  let rows = base.filter(r=> coachOK(r) && (state.filter==="__all"||isSched||r.fn===state.filter)
+    && (!q || (r.name+" "+r.account+" "+r.owner).toLowerCase().includes(q)));
+  const k=state.sortK, dir=state.sortDir;
+  rows.sort((a,b)=>{ let A=a[k], B=b[k]; if(A==null) A=""; if(B==null) B=""; return (A>B?1:A<B?-1:0)*dir; });
+  document.querySelectorAll("th[data-k]").forEach(th=>th.setAttribute("aria-sort", th.dataset.k===k ? (dir>0?"ascending":"descending") : "none"));
+  const getBucket=r=>{if(r.age>=14&&r.age<21) return 'b1'; else if(r.age>=21&&r.age<30) return 'b2'; else if(r.age>=30) return 'b3'; return null;};
+  const bucketColors={b1:'#008D71',b2:'#FFDD00',b3:'#FF0054'};
+  let filtered=rows.filter(r=>state.bucketFilter==='all'||getBucket(r)===state.bucketFilter);
+  if(!filtered.length){ tb.innerHTML=`<tr><td colspan="10" class="empty">No FIs match these filters.</td></tr>`; $("count-note").textContent=""; $("fi-count").textContent="0"; return; }
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  tb.innerHTML = filtered.map(r=>{const b=getBucket(r); return `<tr style="border-left:4px solid ${b?bucketColors[b]:'#ddd'}">
+    <td class="mono"><a href="${SF_BASE}${esc(r.id)}/view" target="_blank" rel="noopener">${esc(r.name)}</a></td>
+    <td class="wrap-cell">${esc(r.account)}</td><td>${esc(r.fn)}</td><td>${esc(r.status)}</td><td class="wrap-cell">${esc(r.owner)}</td>
+    <td class="num">${fmtDate(r.created)}</td><td class="num r">${Math.floor(r.age)}</td><td class="num r">${r.fnDays.toFixed(1)}</td>
+    <td class="num">${r.dr?fmtDate(r.dr):"—"}</td>
+    <td class="why">${esc(r.why)}</td></tr>`}).join("");
+  $("fi-count").textContent=filtered.length;
+  $("count-note").textContent = `Age = days since created · Fn days = days in current function · FI # opens the record in Salesforce`;
+}
+
+
+
+
+function setStatus(t,busy){ const el=$("status"); el.textContent=t; el.classList.toggle("busy",!!busy); }
+function clock(){ return new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}); }
+function showMsg(t,kind){ const m=$("msg"); m.hidden=!t; m.textContent=t||""; m.dataset.kind=kind||""; }
+
+function toDate(v){
+  if(v==null || v==="") return null;
+  if(v instanceof Date) return isNaN(v) ? null : v;
+  if(typeof v==="number") return new Date(Math.round((v-25569)*86400*1000));
+  const d=new Date(String(v).trim()); return isNaN(d) ? null : d;
+}
+function mapColumns(headers){
+  const n=headers.map(normH), map={};
+  for(const key in ALIASES){
+    let idx=-1;
+    for(const a of ALIASES[key].map(normH)){ idx=n.indexOf(a); if(idx>=0) break; }
+    if(idx<0){ for(const a of ALIASES[key].map(normH)){ idx=n.findIndex(h=>h && h.length>3 && h.includes(a)); if(idx>=0) break; } }
+    if(idx>=0 && !Object.values(map).includes(idx)) map[key]=idx;
+  }
+  return map;
+}
+function showColumns(map, headers){
+  const rows=Object.keys(LABELS).map(k=>{
+    const ok = map[k]!=null;
+    return `<li>${LABELS[k]}: ${ok ? `<b>${headers[map[k]]}</b>` : '<span style="color:var(--bad-ink)">not found</span>'}</li>`;
+  }).join("");
+  $("colmap").innerHTML = `<ul style="margin:0;padding-left:18px">${rows}</ul>`;
+}
+function toRecord(row, map){
+  const g=k => map[k]==null ? "" : row[map[k]];
+  return { id:String(g('id')||g('name')||""), name:String(g('name')||""), account:String(g('account')||""),
+    fn:String(g('fn')||"").trim(), status:String(g('status')||"").trim(), owner:String(g('owner')||"").trim(),
+    created:toDate(g('created')), fnDays:Number(g('fnDays'))||0, dr:toDate(g('dr')),
+    domain:g('domain'), dbe:g('dbe'), login:g('login'), coach:fmtCoach(String(g('coach')||"").trim()) };
+}
+
+async function loadHistory(){
+  try{
+    const res=await fetch(HISTORY_URL,{cache:"no-store"});
+    if(!res.ok) throw new Error("no history file");
+    const j=await res.json();
+    HISTORY=[]; mergeHistory(Array.isArray(j)? j : (j.snapshots||[]));
+    $("hist-src").textContent = HISTORY.length+" day"+(HISTORY.length===1?"":"s")+" in history file";
+  }catch(e){
+    $("hist-src").textContent="History file (data/history.json) not found.";
+  }
+  renderHistory();
+}
+
+async function load(){
+  const btn=$("refresh"); btn.disabled=true;
+  setStatus("Loading report…", true);
+  try{
+    if(typeof XLSX==="undefined") throw new Error("The spreadsheet reader didn't load. Check your internet connection and reload.");
+    const res=await fetch(REPORT_URL,{cache:"no-store"});
+    if(!res.ok) throw new Error("Report not found at data/latest-report.xlsx. Check that Power Automate uploaded it.");
+    const wb=XLSX.read(await res.arrayBuffer(),{type:"array",cellDates:true});
+    const grid=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:""});
+    let hi=-1, map=null;
+    for(let i=0;i<Math.min(grid.length,25);i++){
+      const m=mapColumns(grid[i].map(String));
+      if(m.name!=null && m.fn!=null && m.owner!=null){ hi=i; map=m; break; }
+    }
+    if(!map) throw new Error("Couldn't find the FI, Function and Owner columns in the report.");
+    showColumns(map, grid[hi].map(String));
+    const now=new Date(); TODAY=ymd(now);
+    const recs=grid.slice(hi+1).filter(r=>r.some(c=>c!=="")).map(r=>toRecord(r,map));
+    const all=recs.map(r=>classify(r,now)).filter(r=>TRACKED.includes(r.fn) && OWNERS.includes(r.owner) && !["Cancelled","Completed"].includes(r.status) && (r.aging||r.sched));
+    state.rows = all.filter(r=>r.aging && !r.sched);
+    state.sched = all.filter(r=>r.sched);
+    state.all = state.rows.concat(state.sched);
+    fillCoaches(state.all);
+    paint();
+    showMsg("");
+    $("src").className="pill live"; $("src").textContent="Report · "+fmtDate(ymd(now));
+    setStatus("Updated "+clock()+" · "+state.all.length+" FIs · "+state.sched.length+" with upcoming review");
+  }catch(e){
+    showMsg(e.message,"err");
+    $("src").className="pill snap"; $("src").textContent="No report loaded";
+    setStatus("Load failed at "+clock());
+  }finally{ btn.disabled=false; }
+}
+
+(function init(){
+  const last=HISTORY[HISTORY.length-1];
+  renderHistory(); $("src").textContent="Loading…";
+  function showTab(t){ ["today","history"].forEach(n=>{ $("tab-"+n).setAttribute("aria-selected", String(n===t)); $("view-"+n).hidden = n!==t; }); }
+  $("tab-today").addEventListener("click",()=>showTab("today"));
+  $("tab-history").addEventListener("click",()=>{ showTab("history"); renderHistory(); });
+  document.querySelectorAll("[data-grain]").forEach(b=>b.addEventListener("click",()=>{ GRAIN=b.dataset.grain; renderHistory(); }));
+  $("coach").addEventListener("change",e=>{ state.coach=e.target.value; paint(); });
+  $("q").addEventListener("input",e=>{state.q=e.target.value; renderTable();});
+  $("only-aging").addEventListener("change",e=>{state.onlyAging=e.target.checked; renderTable();});
+  document.querySelectorAll("th[data-k]").forEach(th=>th.addEventListener("click",()=>{ const k=th.dataset.k; if(state.sortK===k) state.sortDir*=-1; else {state.sortK=k; state.sortDir=1;} renderTable(); }));
+  document.querySelectorAll(".bucket-filter").forEach(b=>b.addEventListener("click",()=>{ state.bucketFilter=b.dataset.bucket; document.querySelectorAll(".bucket-filter").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderTable(); }));
+  $("refresh").addEventListener("click",()=>{ loadHistory(); load(); });
+  loadHistory();
+  load();
+})();
+
+</script>
+</body></html>
