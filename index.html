@@ -295,14 +295,14 @@ const OWNERS = ["Aaron Taylor","Adam Murphy","Alejandro Rodriguez-Medina","Ashle
 const REPORT_URL = "data/latest-report.csv";
 const HISTORY_URL = "data/history.json";
 const ALIASES = {
-  id:["fulfillment item id","record id","id"],
-  name:["fulfillment item name","fi number","fi","name"],
+  id:["fulfillment item id","fulfillment item fulfillment item id","record id"],
+  name:["fulfillment item id","fi number","fulfillment item name"],
   account:["account name","account"],
   fn:["current function","current function name","function"],
   status:["fulfillment item status","status"],
-  owner:["fulfillment item owner","fulfillment item owner name","owner name","owner"],
+  owner:["fulfillment item owner name","fulfillment item owner","owner name"],
   created:["fulfillment item created date","created date","created"],
-  fnDays:["function aging days","days in function","fn days"],
+  fnDays:["function aging days","function aging","days in function","fn days"],
   dr:["design review date","design review"],
   domain:["domain url","domain/url"],
   dbe:["client is currently using dbe","client currently using dbe"],
@@ -531,8 +531,8 @@ function mapColumns(headers){
   for(const key in ALIASES){
     let idx=-1;
     for(const a of ALIASES[key].map(normH)){ idx=n.indexOf(a); if(idx>=0) break; }
-    if(idx<0){ for(const a of ALIASES[key].map(normH)){ idx=n.findIndex(h=>h && h.length>3 && h.includes(a)); if(idx>=0) break; } }
-    if(idx>=0 && !Object.values(map).includes(idx)) map[key]=idx;
+    if(idx<0){ for(const a of ALIASES[key].map(normH).filter(a=>a.length>=6)){ idx=n.findIndex(h=>h && h.includes(a)); if(idx>=0) break; } }
+    if(idx>=0) map[key]=idx;
   }
   return map;
 }
