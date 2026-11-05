@@ -163,7 +163,7 @@ td.period{color:var(--heading);font-weight:700}
     <div class="brandmark">FI</div>
     <div class="titles">
       <h1>FI Aging Tracker</h1>
-      <p>Aging FIs plus upcoming scheduled reviews &middot; data from the daily Salesforce report &middot; designated owners only (60 people)</p>
+      <p>Aging FIs plus upcoming scheduled reviews &middot; data from the daily Salesforce report &middot; designated owners only (118 people)</p>
     </div>
     <div class="hdr-actions">
       <span id="src" class="pill snap">Loading&hellip;</span>
@@ -279,7 +279,6 @@ td.period{color:var(--heading);font-weight:700}
   </details>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 
 const SCHED_RULE = "2+ weeks old, design review date today or later";
@@ -291,7 +290,7 @@ const RULES = {
   Unengaged:"More than 5 business days in Unengaged"
 };
 const SF_BASE = "https://national.lightning.force.com/lightning/r/Fulfillment_Item__c/";
-const OWNERS = ["Aaron Taylor","Adam Murphy","Alejandro Rodriguez-Medina","Ashley Shaffer","Ashley Vasquez Mena","Chelsea Dingus","Darling Santos Taveras","Dave Crisler","Dorka Frias Lantigua","Elizabeth White","Ellise Payne","Eric Johnson","Felix Caba Jimenez","Florence Francois Nova","Heidi Torres Uribe","Indu Vijay","Irina Molina Molina","Ironelis Cabrera Bautista","Jaelene Alejo Rodriguez","Jathzelyn Fortuna Paulino","Jennifer Koly","Joseph Carmona Garcia","Juan Sanchez Sanchez","Karen Capellan Tavarez","Karissa Hernandez","Karmita Turner","Katelyn Ankrom","Kellie Lester","Kendra Leary","Kyle Dye","Libby Booher","Lisbeth Gruning Soriano","Mark Velazquez","Matt Daly","Matthew Reedy","Mia O'Dirling","Misti Dixon","Misty Decatur","MJ Brielmann","Nikita Siepen-Bowers","Peter Manalac","Rafael Sencion","Saira Julian Guzman","Sakshi Mahalwal","Sam Frias De Paula","Sarah Swanson","Sati Pimentel Malespin","Stacy Roers","Steven Saunders","Sylvia Appla","Taylor Kidd","Tracy-Ann Gaudencio","Trisha Stalnaker","Tyler Grant","Victor Abner Moscoso Fernandez","Warda Gul","Yessica Montero Urena","Zoltan Rudolf"];
+const OWNERS = ["Aaron Taylor","Adam Murphy","Alejandro Rodriguez-Medina","Ashley Shaffer","Ashley Vasquez Mena","Chelsea Dingus","Darling Santos Taveras","Dave Crisler","Dorka Frias Lantigua","Elizabeth White","Ellise Payne","Eric Johnson","Felix Caba Jimenez","Florence Francois Nova","Heidi Torres Uribe","Indu Vijay","Irina Molina Molina","Ironelis Cabrera Bautista","Jaelene Alejo Rodriguez","Jathzelyn Fortuna Paulino","Jennifer Koly","Joseph Carmona Garcia","Juan Sanchez Sanchez","Karen Capellan Tavarez","Karissa Hernandez","Karmita Turner","Katelyn Ankrom","Kellie Lester","Kendra Leary","Kyle Dye","Libby Booher","Lisbeth Gruning Soriano","Mark Velazquez","Matt Daly","Matthew Reedy","Mia O'Dirling","Misti Dixon","Misty Decatur","MJ Brielmann","Nikita Siepen-Bowers","Peter Manalac","Rafael Sencion","Saira Julian Guzman","Sakshi Mahalwal","Sam Frias De Paula","Sarah Swanson","Sati Pimentel Malespin","Stacy Roers","Steven Saunders","Sylvia Appla","Taylor Kidd","Tracy-Ann Gaudencio","Trisha Stalnaker","Tyler Grant","Victor Abner Moscoso Fernandez","Warda Gul","Yessica Montero Urena","Zoltan Rudolf","Anthony Aguasvivas","Shannon Comas","Lauren Crutchfield","Lisbeth Cruz Marte","Donny Dishmey Febles","Chyna Elias","Scott Jennings","Jenny Kimerling","Jasmine McLain","Jonathan Miles","Keila Moreno Mercado","Casey Nugent","Dominic Ondabu","Antonio Perez","Taylor Sloan","Stefanie Smith","Julia Cowden","Jaclyn Allen","Alicia Battiata","Jason Hockett","Brittany Hohensee","Will King","Aylin Kumcur Reyes","Hunter Leake","Staci Maples","Yenifer Medina Perez","Haley Mitchell","Sydney Pacheco","Mariel Rosa Hernandez","Tina Stone","Kristen Weaver","LaDonna Williams","Cristy Hicks","Carolina Suarez Ovalles","Dexter Tardy","Mark Hayes","Kelly Householder","Erika Hubbard","Pedro Jimenez Medina","Holly Koehn","Lorenz Marsh","Madison McCaskey","David Ostendorf","Nicole Ozoria Minaya","Summer Rima","Glenys Johanna Rodriguez Gomez","Katherine Sanchez Perez","Stephanie Stalone","Stephen Van Niekerk","Mansi Aggarwal","Alfie Alford","Richard Cerreto","Teresa Gregorio","Fiona Ip","Betty Karamzalis","Shrihari Khanzode","Luise Meisinger","Ruchi Sharma","Saif Sulaiman","Glenys Rodriguez Gomez"];
 const REPORT_URL = "data/latest-report.csv";
 const HISTORY_URL = "data/history.json";
 const ALIASES = {
@@ -531,10 +530,9 @@ function mapColumns(headers){
   for(const key in ALIASES){
     let idx=-1;
     for(const a of ALIASES[key].map(normH)){ idx=n.indexOf(a); if(idx>=0) break; }
-    if(idx<0){ for(const a of ALIASES[key].map(normH)){ if(a.length<5) continue; idx=n.findIndex(h=>h && h.includes(a)); if(idx>=0) break; } }
+    if(idx<0){ for(const a of ALIASES[key].map(normH)){ idx=n.findIndex(h=>h && h.length>3 && h.includes(a)); if(idx>=0) break; } }
     if(idx>=0 && !Object.values(map).includes(idx)) map[key]=idx;
   }
-  if(map.name==null && map.id!=null) map.name=map.id;
   return map;
 }
 function showColumns(map, headers){
