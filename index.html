@@ -364,6 +364,11 @@ function fmtAvg(rows,b){
   if(!xs.length) return "avg \u2014";
   return "avg "+(xs.reduce((a,c)=>a+c,0)/xs.length).toFixed(1)+"d";
 }
+function fmtAvgAll(rows){
+  const xs=rows.map(r=>Number(r.fnDays)||0);
+  if(!xs.length) return "\u2014";
+  return (xs.reduce((a,c)=>a+c,0)/xs.length).toFixed(1)+"d";
+}
 function renderSummary(s){
   CUR=s;
   const prev = HISTORY.filter(h=>h.date<s.date).slice(-1)[0] || null;
@@ -379,7 +384,7 @@ function renderSummary(s){
     return `<button type="button" class="lane" data-fn="${f}" aria-pressed="${state.filter===f}" style="display:flex;flex-direction:column">
       <div class="top"><span class="name">${f}</span></div>
       <div class="big num">${b.aging}</div>
-      ${buckets}<div class="rule" style="margin-top:auto">${RULES[f]}</div></button>`;
+      ${buckets}<div style="text-align:center;font-size:12px;font-weight:700;color:#FF5000">Overall avg: ${fmtAvgAll(ROWS_F)}</div><div class="rule" style="margin-top:auto">${RULES[f]}</div></button>`;
   }).join("");
 
   renderSched();
@@ -398,7 +403,7 @@ function renderSched(){
   $("lanes").querySelector('[data-fn="Review"]').insertAdjacentHTML("afterend", `<button type="button" class="lane" data-fn="__sched" aria-pressed="${pressed}" style="display:flex;flex-direction:column">
     <div class="top"><span class="name">Review w/ Appointment</span></div>
     <div class="big num">${SCHED.length}</div>
-    ${buckets}<div class="rule" style="margin-top:auto">${SCHED_RULE}</div></button>`);
+    ${buckets}<div style="text-align:center;font-size:12px;font-weight:700;color:#FF5000">Overall avg: ${fmtAvgAll(ROWS_F)}</div><div class="rule" style="margin-top:auto">${SCHED_RULE}</div></button>`);
 }
 
 let GRAIN="day";
