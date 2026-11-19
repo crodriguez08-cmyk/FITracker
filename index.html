@@ -203,9 +203,9 @@ td.period{color:var(--heading);font-weight:700}
         </div>
         <div style="display:flex;gap:6px;margin-top:8px;font-size:12px" role="group" aria-label="Age filter">
           <button type="button" class="chip bucket-filter" data-bucket="all" aria-pressed="true">All</button>
-          <button type="button" class="chip bucket-filter" data-bucket="b1">14-21d</button>
-          <button type="button" class="chip bucket-filter" data-bucket="b2">21-29d</button>
-          <button type="button" class="chip bucket-filter" data-bucket="b3">30+d</button>
+          <button type="button" class="chip bucket-filter" data-bucket="b1">7-13d</button>
+          <button type="button" class="chip bucket-filter" data-bucket="b2">14-20d</button>
+          <button type="button" class="chip bucket-filter" data-bucket="b3">21+d</button>
         </div>
         <div style="font-size:12px;color:#999;margin-top:4px"><span id="fi-count">0</span> FIs shown</div>
       </div>
@@ -228,12 +228,12 @@ td.period{color:var(--heading);font-weight:700}
   <details class="rules panel">
     <summary>SLA rules used on this page</summary>
     <ul>
-      <li><b>Goal:</b> no open FI older than 14 days, counted from Fulfillment Item: Created Date.</li>
-      <li><b>Consultation:</b> aging when created more than 14 days ago.</li>
+      <li><b>Goal:</b> no open FI older than 7 days, counted from Fulfillment Item: Created Date.</li>
+      <li><b>Consultation:</b> aging when created 7 or more days ago.</li>
       <li><b>Launch:</b> any Launch FI still In Progress is aging. It should have Domain/URL, Client is currently using DBE, and Login Information Acquired filled in, then be completed.</li>
-      <li><b>Review:</b> aging when FI is 14+ days old AND (Design Review is blank or the date has passed).</li>
-      <li><b>Unengaged:</b> aging when FI is 14+ days old AND has been in Unengaged more than 5 business days (from Function Aging Days).</li>
-      <li><b>Upcoming scheduled review:</b> FI is 14+ days old AND Design Review date is today or later, in any tracked function. Its own box shows the count; these FIs are also included in Total tracked and All tracked FIs, but not in the function boxes.</li>
+      <li><b>Review:</b> aging when FI is 7+ days old AND (Design Review is blank or the date has passed).</li>
+      <li><b>Unengaged:</b> aging when FI is 7+ days old AND has been in Unengaged more than 5 business days (from Function Aging Days).</li>
+      <li><b>Upcoming scheduled review:</b> FI is 7+ days old AND Design Review date is today or later, in any tracked function. Its own box shows the count; these FIs are also included in Total tracked and All tracked FIs, but not in the function boxes.</li>
       <li>Only Consultation, Launch, Review and Unengaged FIs are included.</li>
     </ul>
   </details>
@@ -247,10 +247,10 @@ td.period{color:var(--heading);font-weight:700}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 
-const SCHED_RULE = "2+ weeks old, design review date today or later";
+const SCHED_RULE = "7+ days old, design review date today or later";
 const TRACKED = ["Consultation","Launch","Review","Unengaged"];
 const RULES = {
-  Consultation:"Over 14 days since created",
+  Consultation:"7+ days since created",
   Launch:"Any In Progress Launch FI",
   Review:"No upcoming design review",
   Unengaged:"More than 5 business days in Unengaged"
@@ -315,21 +315,21 @@ function classify(r, now){
   const upcoming = !!drStr && drStr>=today;
   const fn=r.fn||"(blank)";
   let aging=false, why="";
-  if(fn==="Consultation"){ if(age>14){aging=true; why=`Created ${Math.floor(age)} days ago (limit 14)`;} }
+  if(fn==="Consultation"){ if(age>=7){aging=true; why=`Created ${Math.floor(age)} days ago (limit 7)`;} }
   else if(fn==="Launch"){
     if(r.status==="In Progress"){ aging=true;
       const miss=[]; if(!r.domain) miss.push("Domain/URL"); if(!r.dbe) miss.push("Using DBE"); if(!r.login) miss.push("Login info");
       why = miss.length? "Missing: "+miss.join(", ") : "All fields filled, ready to complete"; }
   }
-  else if(fn==="Review"){ if(age>=14){aging=true; why= upcoming ? `${Math.floor(age)}d old, review ${fmtDate(drStr)} upcoming` : drStr ? `${Math.floor(age)}d old, review ${fmtDate(drStr)} passed` : `${Math.floor(age)}d old, no review date`;} }
+  else if(fn==="Review"){ if(age>=7){aging=true; why= upcoming ? `${Math.floor(age)}d old, review ${fmtDate(drStr)} upcoming` : drStr ? `${Math.floor(age)}d old, review ${fmtDate(drStr)} passed` : `${Math.floor(age)}d old, no review date`;} }
   else if(fn==="Unengaged"){
     const entered=new Date(now - Math.max(fnDays,0)*864e5); const bd=businessDaysSince(entered, now);
-    if(age>=14 && bd>5){aging=true; why=`${Math.floor(age)}d old, ${bd} business days in Unengaged (limit 5)`;}
+    if(age>=7 && bd>5){aging=true; why=`${Math.floor(age)}d old, ${bd} business days in Unengaged (limit 5)`;}
   }
-  const sched = fn==="Review" && age>=14 && upcoming;
+  const sched = fn==="Review" && age>=7 && upcoming;
   return { id:r.id, name:r.name, account:r.account, fn, status:r.status, owner:r.owner, coach:r.coach,
     created:r.created, age, fnDays, dr:drStr, aging, sched, over14:age>14,
-    why: sched ? `Review ${fmtDate(drStr)}` : (why || (age>14 && !TRACKED.includes(fn) ? "Over 2 weeks old" : "")) };
+    why: sched ? `Review ${fmtDate(drStr)}` : (why || (age>=7 && !TRACKED.includes(fn) ? "Over 7 days old" : "")) };
 }
 
 function summarize(rows){
@@ -338,9 +338,9 @@ function summarize(rows){
   rows = rows.filter(r=>TRACKED.includes(r.fn));
   rows.forEach(r=>{ if(r.over14) over14++;
     if(TRACKED.includes(r.fn)){ tracked++; byFn[r.fn].total++; if(r.aging){byFn[r.fn].aging++; aging++;
-      if(r.age>=14&&r.age<21) byFn[r.fn].b1++;
-      else if(r.age>=21&&r.age<30) byFn[r.fn].b2++;
-      else if(r.age>=30) byFn[r.fn].b3++;
+      if(r.age>=7&&r.age<14) byFn[r.fn].b1++;
+      else if(r.age>=14&&r.age<21) byFn[r.fn].b2++;
+      else if(r.age>=21) byFn[r.fn].b3++;
     } }
     });
   return { date:ymd(new Date()), total:rows.length, over14, tracked, aging, byFn, others };
@@ -358,14 +358,14 @@ function delta(cur, prev, el, lowerIsBetter=true, pct=false){
 let CUR=null;
 function paint(){ if(state.rows) renderSummary(currentSummary()); else if(CUR) renderSummary(CUR); renderTable(); }
 
-function inBucket(r,b){ return b==="b1" ? (r.age>=14&&r.age<21) : b==="b2" ? (r.age>=21&&r.age<30) : (r.age>=30); }
+function inBucket(r,b){ return b==="b1" ? (r.age>=7&&r.age<14) : b==="b2" ? (r.age>=14&&r.age<21) : (r.age>=21); }
 function fmtAvg(rows,b){
-  const xs=rows.filter(r=>inBucket(r,b)).map(r=>Number(r.fnDays)||0);
+  const xs=rows.filter(r=>inBucket(r,b) && Number(r.fnDays)>=0).map(r=>Number(r.fnDays)||0);
   if(!xs.length) return "avg \u2014";
   return "avg "+(xs.reduce((a,c)=>a+c,0)/xs.length).toFixed(1)+"d";
 }
 function fmtAvgAll(rows){
-  const xs=rows.map(r=>Number(r.fnDays)||0);
+  const xs=rows.filter(r=>Number(r.fnDays)>=0).map(r=>Number(r.fnDays)||0);
   if(!xs.length) return "\u2014";
   return (xs.reduce((a,c)=>a+c,0)/xs.length).toFixed(1)+"d";
 }
@@ -380,7 +380,7 @@ function renderSummary(s){
     const pv = state.coach==="__all" && prev&&prev.byFn&&prev.byFn[f]; let changeIndicator="";
     if(pv){ const d=b.aging-pv.aging; changeIndicator = `<span style="font-size:13px;font-weight:600;color:var(${d<0?'--ok':'--bad'})">${d>0?'+':''}${d}</span>`; }
     const ROWS_F = state.rows.filter(r=>r.fn===f && coachOK(r));
-  const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">14-21d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b1')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">21-29d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b2')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">30+d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b3')}</span></div></div></div>`;
+  const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">7-13d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b1')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">14-20d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b2')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">21+d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b3')}</span></div></div></div>`;
     return `<button type="button" class="lane" data-fn="${f}" aria-pressed="${state.filter===f}" style="display:flex;flex-direction:column">
       <div class="top"><span class="name">${f}</span></div>
       <div class="big num">${b.aging}</div>
@@ -397,9 +397,9 @@ function renderSched(){
   const SCHED=state.sched.filter(coachOK);
   const pressed = state.filter==="__sched";
   const b={b1:0,b2:0,b3:0};
-  SCHED.forEach(r=>{ if(r.age>=14&&r.age<21) b.b1++; else if(r.age>=21&&r.age<30) b.b2++; else if(r.age>=30) b.b3++; });
+  SCHED.forEach(r=>{ if(r.age>=7&&r.age<14) b.b1++; else if(r.age>=14&&r.age<21) b.b2++; else if(r.age>=21) b.b3++; });
   const ROWS_F = SCHED;
-  const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">14-21d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b1')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">21-29d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b2')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">30+d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b3')}</span></div></div></div>`;
+  const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">7-13d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b1')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">14-20d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b2')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">21+d</span><span style="font-size:10px;color:#FFFFFF;text-align:center">${fmtAvg(ROWS_F,'b3')}</span></div></div></div>`;
   $("lanes").querySelector('[data-fn="Review"]').insertAdjacentHTML("afterend", `<button type="button" class="lane" data-fn="__sched" aria-pressed="${pressed}" style="display:flex;flex-direction:column">
     <div class="top"><span class="name">Review w/ Appointment</span></div>
     <div class="big num">${SCHED.length}</div>
@@ -465,7 +465,7 @@ function renderTrend(live){
 function renderTable(){
   const tb=$("rows");
   const isSched = state.filter==="__sched";
-  $("list-title").textContent = state.filter==="__all" ? "All tracked FIs" : isSched ? "Review w/ Appointment (2+ weeks old)" : state.filter+" FIs";
+  $("list-title").textContent = state.filter==="__all" ? "All tracked FIs" : isSched ? "Review w/ Appointment (7+ days old)" : state.filter+" FIs";
   $("aging-lbl").hidden = state.filter==="__all" || isSched;
   if(!state.rows){ return; }
   const q=state.q.trim().toLowerCase();
@@ -475,7 +475,7 @@ function renderTable(){
   const k=state.sortK, dir=state.sortDir;
   rows.sort((a,b)=>{ let A=a[k], B=b[k]; if(A==null) A=""; if(B==null) B=""; return (A>B?1:A<B?-1:0)*dir; });
   document.querySelectorAll("th[data-k]").forEach(th=>th.setAttribute("aria-sort", th.dataset.k===k ? (dir>0?"ascending":"descending") : "none"));
-  const getBucket=r=>{if(r.age>=14&&r.age<21) return 'b1'; else if(r.age>=21&&r.age<30) return 'b2'; else if(r.age>=30) return 'b3'; return null;};
+  const getBucket=r=>{if(r.age>=7&&r.age<14) return 'b1'; else if(r.age>=14&&r.age<21) return 'b2'; else if(r.age>=21) return 'b3'; return null;};
   const bucketColors={b1:'#008D71',b2:'#FFDD00',b3:'#FF0054'};
   let filtered=rows.filter(r=>state.bucketFilter==='all'||getBucket(r)===state.bucketFilter);
   if(!filtered.length){ tb.innerHTML=`<tr><td colspan="10" class="empty">No FIs match these filters.</td></tr>`; $("count-note").textContent=""; $("fi-count").textContent="0"; return; }
