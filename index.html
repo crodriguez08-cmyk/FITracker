@@ -178,10 +178,6 @@ td.period{color:var(--heading);font-weight:700}
 
   <div id="msg" class="msg" hidden></div>
 
-  <nav class="tabs" role="tablist" aria-label="Views">
-    <button type="button" class="tab" role="tab" id="tab-today" aria-selected="true" aria-controls="view-today">Today</button>
-    <button type="button" class="tab" role="tab" id="tab-history" aria-selected="false" aria-controls="view-history">History</button>
-  </nav>
 
   <div id="view-today" class="view" role="tabpanel">
 
@@ -227,37 +223,6 @@ td.period{color:var(--heading);font-weight:700}
     <div class="note" id="count-note"></div>
   </section>
 
-  </div>
-
-  <div id="view-history" class="view" role="tabpanel" hidden>
-    <section class="panel">
-      <div class="panel-head">
-        <h2 id="h-title">Day over day</h2>
-        <div class="grain" role="group" aria-label="Group history by">
-          <span class="m-label">Group by</span>
-          <button type="button" class="chip" data-grain="day" aria-pressed="true">Day</button>
-          <button type="button" class="chip" data-grain="week" aria-pressed="false">Week</button>
-          <button type="button" class="chip" data-grain="month" aria-pressed="false">Month</button>
-        </div>
-      </div>
-      <div class="legend"><span style="--c:var(--bad)">Aging (out of SLA)</span><span style="--c:var(--accent)">Over 2 weeks old</span></div>
-      <svg id="trend" viewBox="0 0 900 220" role="img" aria-label="Trend of aging FIs"></svg>
-      <div class="note" id="trend-note"></div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head"><h2 id="ht-title">Daily snapshots</h2><span class="note" id="hist-src"></span></div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th>Period</th><th class="r" title="Snapshots in this period">Days</th><th class="r">Aging</th><th class="r" title="Change in aging vs previous period">Change</th>
-            <th class="r">Consultation</th><th class="r">Launch</th><th class="r">Review</th><th class="r">Review w/ Appointment</th><th class="r">Unengaged</th><th class="r">Tracked</th>
-          </tr></thead>
-          <tbody id="hist-rows"></tbody>
-        </table>
-      </div>
-      <div class="note" id="hist-note"></div>
-    </section>
   </div>
 
   <details class="rules panel">
@@ -393,19 +358,26 @@ function delta(cur, prev, el, lowerIsBetter=true, pct=false){
 let CUR=null;
 function paint(){ if(state.rows) renderSummary(currentSummary()); else if(CUR) renderSummary(CUR); renderTable(); }
 
+function inBucket(r,b){ return b==="b1" ? (r.age>=14&&r.age<21) : b==="b2" ? (r.age>=21&&r.age<30) : (r.age>=30); }
+function fmtAvg(rows,b){
+  const xs=rows.filter(r=>inBucket(r,b)).map(r=>Number(r.fnDays)||0);
+  if(!xs.length) return "avg \u2014";
+  return "avg "+(xs.reduce((a,c)=>a+c,0)/xs.length).toFixed(1)+"d";
+}
 function renderSummary(s){
   CUR=s;
   const prev = HISTORY.filter(h=>h.date<s.date).slice(-1)[0] || null;
   $("k-total").textContent = s.total;
-  if(state.coach==="__all") delta(s.total, prev&&prev.total, $("d-total")); else $("d-total").textContent="";
+  $("d-total").textContent="";
 
   $("lanes").innerHTML = TRACKED.map(f=>{
     const b=s.byFn[f]||{total:0,aging:0,b1:0,b2:0,b3:0}; const p=b.total? b.aging/b.total:0;
     const pv = state.coach==="__all" && prev&&prev.byFn&&prev.byFn[f]; let changeIndicator="";
     if(pv){ const d=b.aging-pv.aging; changeIndicator = `<span style="font-size:13px;font-weight:600;color:var(${d<0?'--ok':'--bad'})">${d>0?'+':''}${d}</span>`; }
-    const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">14-21d</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">21-29d</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">30+d</span></div></div></div>`;
+    const ROWS_F = state.rows.filter(r=>r.fn===f && coachOK(r));
+  const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">14-21d</span><span style="font-size:10px;color:#999;text-align:center">${fmtAvg(ROWS_F,'b1')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">21-29d</span><span style="font-size:10px;color:#999;text-align:center">${fmtAvg(ROWS_F,'b2')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">30+d</span><span style="font-size:10px;color:#999;text-align:center">${fmtAvg(ROWS_F,'b3')}</span></div></div></div>`;
     return `<button type="button" class="lane" data-fn="${f}" aria-pressed="${state.filter===f}" style="display:flex;flex-direction:column">
-      <div class="top"><span class="name">${f}</span><div style="display:flex;flex-direction:column;align-items:flex-end;font-size:11px;color:#999"><div>${changeIndicator}</div><div>vs yesterday</div></div></div>
+      <div class="top"><span class="name">${f}</span></div>
       <div class="big num">${b.aging}</div>
       ${buckets}<div class="rule" style="margin-top:auto">${RULES[f]}</div></button>`;
   }).join("");
@@ -421,9 +393,10 @@ function renderSched(){
   const pressed = state.filter==="__sched";
   const b={b1:0,b2:0,b3:0};
   SCHED.forEach(r=>{ if(r.age>=14&&r.age<21) b.b1++; else if(r.age>=21&&r.age<30) b.b2++; else if(r.age>=30) b.b3++; });
-  const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">14-21d</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">21-29d</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">30+d</span></div></div></div>`;
+  const ROWS_F = SCHED;
+  const buckets=`<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;flex:1"><div style="display:flex;gap:8px;justify-content:space-around"><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#008D71;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b1}</span><span style="font-size:10px;color:#999;text-align:center">14-21d</span><span style="font-size:10px;color:#999;text-align:center">${fmtAvg(ROWS_F,'b1')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#333;background:#FFDD00;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b2}</span><span style="font-size:10px;color:#999;text-align:center">21-29d</span><span style="font-size:10px;color:#999;text-align:center">${fmtAvg(ROWS_F,'b2')}</span></div><div style="display:grid;place-items:center;gap:2px"><span style="color:#fff;background:#FF0054;width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-size:13px;font-weight:700">${b.b3}</span><span style="font-size:10px;color:#999;text-align:center">30+d</span><span style="font-size:10px;color:#999;text-align:center">${fmtAvg(ROWS_F,'b3')}</span></div></div></div>`;
   $("lanes").querySelector('[data-fn="Review"]').insertAdjacentHTML("afterend", `<button type="button" class="lane" data-fn="__sched" aria-pressed="${pressed}" style="display:flex;flex-direction:column">
-    <div class="top"><span class="name">Review w/ Appointment</span><div style="display:flex;flex-direction:column;align-items:flex-end;font-size:11px;color:#999"><div>${(()=>{ if(state.coach!=="__all") return ""; const pv=HISTORY.filter(h=>h.date<(CUR?CUR.date:"")).slice(-1)[0]; if(!pv||pv.sched==null) return ""; const d=SCHED.length-pv.sched; return `<span style="font-size:13px;font-weight:600;color:var(${d<0?'--ok':'--bad'})">${d>0?'+':''}${d}</span>`; })()}</div><div>vs yesterday</div></div></div>
+    <div class="top"><span class="name">Review w/ Appointment</span></div>
     <div class="big num">${SCHED.length}</div>
     ${buckets}<div class="rule" style="margin-top:auto">${SCHED_RULE}</div></button>`);
 }
@@ -451,7 +424,6 @@ function renderHistory(){
   const rows=grouped(GRAIN);
   $("ht-title").textContent={day:"Daily snapshots",week:"Weekly averages",month:"Monthly averages"}[GRAIN];
   $("h-title").textContent={day:"Day over day",week:"Week over week",month:"Month over month"}[GRAIN];
-  document.querySelectorAll("[data-grain]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.grain===GRAIN)));
   const out=rows.slice().reverse().map((r,i,arr)=>{
     const prev=arr[i+1]; const d= prev? r.aging-prev.aging : null;
     const cell = d==null? '<td class="r">—</td>' : `<td class="r ${d<0?'d-down':d>0?'d-up':''}">${d>0?'+':''}${d}</td>`;
@@ -551,18 +523,6 @@ function toRecord(row, map){
     domain:g('domain'), dbe:g('dbe'), login:g('login'), coach:fmtCoach(String(g('coach')||"").trim()) };
 }
 
-async function loadHistory(){
-  try{
-    const res=await fetch(HISTORY_URL,{cache:"no-store"});
-    if(!res.ok) throw new Error("no history file");
-    const j=await res.json();
-    HISTORY=[]; mergeHistory(Array.isArray(j)? j : (j.snapshots||[]));
-    $("hist-src").textContent = HISTORY.length+" day"+(HISTORY.length===1?"":"s")+" in history file";
-  }catch(e){
-    $("hist-src").textContent="History file (data/history.json) not found.";
-  }
-  renderHistory();
-}
 
 async function load(){
   const btn=$("refresh"); btn.disabled=true;
@@ -600,18 +560,13 @@ async function load(){
 
 (function init(){
   const last=HISTORY[HISTORY.length-1];
-  renderHistory(); $("src").textContent="Loading…";
-  function showTab(t){ ["today","history"].forEach(n=>{ $("tab-"+n).setAttribute("aria-selected", String(n===t)); $("view-"+n).hidden = n!==t; }); }
-  $("tab-today").addEventListener("click",()=>showTab("today"));
-  $("tab-history").addEventListener("click",()=>{ showTab("history"); renderHistory(); });
-  document.querySelectorAll("[data-grain]").forEach(b=>b.addEventListener("click",()=>{ GRAIN=b.dataset.grain; renderHistory(); }));
+  $("src").textContent="Loading…";
   $("coach").addEventListener("change",e=>{ state.coach=e.target.value; paint(); });
   $("q").addEventListener("input",e=>{state.q=e.target.value; renderTable();});
   $("only-aging").addEventListener("change",e=>{state.onlyAging=e.target.checked; renderTable();});
   document.querySelectorAll("th[data-k]").forEach(th=>th.addEventListener("click",()=>{ const k=th.dataset.k; if(state.sortK===k) state.sortDir*=-1; else {state.sortK=k; state.sortDir=1;} renderTable(); }));
   document.querySelectorAll(".bucket-filter").forEach(b=>b.addEventListener("click",()=>{ state.bucketFilter=b.dataset.bucket; document.querySelectorAll(".bucket-filter").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderTable(); }));
-  $("refresh").addEventListener("click",()=>{ loadHistory(); load(); });
-  loadHistory();
+  $("refresh").addEventListener("click",()=>{ load(); });
   load();
 })();
 
